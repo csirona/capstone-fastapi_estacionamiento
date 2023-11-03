@@ -152,14 +152,16 @@ class UserActivation(BaseModel):
 
 # Pydantic model for creating a reservation
 class ReservationCreate(BaseModel):
+    id:str
     user_id: int
     parking_spot_id: str
     start_time: datetime
     end_time: datetime
+    is_active: bool
 
 # Pydantic model for reservation response
 class ReservationResponse(BaseModel):
-    id: int
+    id: str
     user_id: int
     parking_spot_id: str
     start_time: datetime
@@ -572,7 +574,24 @@ async def get_wallet(user_id: int):
         raise HTTPException(status_code=404, detail="Wallet not found")
     return wallet
 
-# Create a new card
+
+
+@app.post("/wallet/charge/{user_id}")
+async def charge_wallet(user_id: int, amount: float, db: Session = Depends(get_db)):
+    # Retrieve the user's wallet
+    wallet = db.query(Wallet).filter(Wallet.user_id == user_id).first()
+
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+
+    # Update the wallet balance
+    wallet.balance += amount
+    db.commit()
+
+    # Return the updated wallet information
+    return WalletResponse(id=wallet.id, user_id=wallet.user_id, balance=wallet.balance)
+
+
 @app.post("/cards/")
 async def create_card(card_data: CardCreate):
     db = SessionLocal()
@@ -758,8 +777,7 @@ async def get_parking_movements(user_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching parking movements: {str(e)}")
 
-
-
+# Create a reservation
 @app.post("/reservations/", response_model=ReservationResponse)
 def create_reservation(reservation: ReservationCreate, db: Session = Depends(get_db)):
     db_reservation = Reservation(**reservation.dict())
@@ -768,21 +786,25 @@ def create_reservation(reservation: ReservationCreate, db: Session = Depends(get
     db.refresh(db_reservation)
     return db_reservation
 
+# Read a reservation
 @app.get("/reservations/{reservation_id}", response_model=ReservationResponse)
-def read_reservation(reservation_id: int, db: Session = Depends(get_db)):
+def read_reservation(reservation_id: str, db: Session = Depends(get_db)):
     db_reservation = db.query(Reservation).filter(Reservation.id == reservation_id).first()
     if db_reservation is None:
         raise HTTPException(status_code=404, detail="Reservation not found")
     return db_reservation
 
+# Cancel a reservation
 @app.put("/reservations/{reservation_id}/cancel")
-def cancel_reservation(reservation_id: int, db: Session = Depends(get_db)):
+def cancel_reservation(reservation_id: str, db: Session = Depends(get_db)):
     db_reservation = db.query(Reservation).filter(Reservation.id == reservation_id).first()
     if db_reservation is None:
         raise HTTPException(status_code=404, detail="Reservation not found")
     db_reservation.is_active = False
     db.commit()
     return {"status": "Reservation cancelled"}
+
+# Get reservations by user ID
 @app.get("/reservations/user/{user_id}", response_model=List[ReservationResponse])
 def get_reservations_by_user_id(user_id: int, db: Session = Depends(get_db)):
     db_reservations = db.query(Reservation).filter(Reservation.user_id == user_id).all()
@@ -790,11 +812,13 @@ def get_reservations_by_user_id(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No reservations found for the user")
     return db_reservations
 
+# Get all reservations
 @app.get("/reservations/all", response_model=List[ReservationResponse])
 def get_all_reservations(db: Session = Depends(get_db)):
     db_reservations = db.query(Reservation).all()
     return db_reservations
 
+# Check reservation availability at a specific time
 @app.get("/reservations/check")
 def check_reservation_at_time(check_time: datetime, db: Session = Depends(get_db)):
     db_reservation = db.query(Reservation).filter(
@@ -805,6 +829,7 @@ def check_reservation_at_time(check_time: datetime, db: Session = Depends(get_db
         return {"status": "Unavailable", "reservation_id": db_reservation.id}
     else:
         return {"status": "Available"}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

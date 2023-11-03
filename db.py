@@ -102,7 +102,7 @@ class ParkingMovement(Base):
 class Reservation(Base):
     __tablename__ = "reservations"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     parking_spot_id = Column(String)  # Si tienes una tabla para espacios de estacionamiento, podrías usar ForeignKey aquí también
     start_time = Column(DateTime, nullable=False)
@@ -114,7 +114,7 @@ class Reservation(Base):
     # parking_spot = relationship("ParkingSpot", back_populates="reservations") # Descomenta esto si tienes una tabla de ParkingSpot
 
 # Agrega la relación en la clase User
-User.reservations = relationship("Reservation", back_populates="user")
+    User.reservations = relationship("Reservation", back_populates="user")
 # ParkingSpot.reservations = relationship("Reservation", back_populates="parking_spot") # Descomenta esto si tienes una tabla de ParkingSpot
 
 
