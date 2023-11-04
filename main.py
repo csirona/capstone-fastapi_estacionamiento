@@ -172,6 +172,18 @@ class ReservationResponse(BaseModel):
 class CarStatus(BaseModel):
     is_active: bool
 
+# Define a Pydantic model to represent the request data for money deduction
+class DeductMoneyRequest(BaseModel):
+    user_id: int
+    amount: float
+
+# Define a Pydantic model to represent the payment request data
+class PaymentRequest(BaseModel):
+    amount: float
+    currency: str
+    order_info: str
+
+
 @app.post("/cars/{car_id}/toggle/")
 def toggle_car_status(car_id: int, car_status: CarStatus, db: Session = Depends(get_db)):
     car = db.query(Car).filter(Car.id == car_id).first()
@@ -591,6 +603,48 @@ async def charge_wallet(user_id: int, amount: float, db: Session = Depends(get_d
     # Return the updated wallet information
     return WalletResponse(id=wallet.id, user_id=wallet.user_id, balance=wallet.balance)
 
+# Simulate payment initiation (replace this with actual integration)
+@app.post("/initiate-payment/")
+async def initiate_payment(payment_request: PaymentRequest):
+    # Extract payment details from the request
+    amount = payment_request.amount
+    currency = payment_request.currency
+    order_info = payment_request.order_info
+
+    # Simulate payment initiation
+    simulated_payment_url = f"https://webpay-chile.com/payment?amount={amount}&currency={currency}&order_info={order_info}"
+
+    return {"message": "Payment initiated successfully (simulated)", "redirect_url": simulated_payment_url}
+
+@app.post("/deduct-money/")
+async def deduct_money(request_data: DeductMoneyRequest, db: Session = Depends(get_db)):
+    user_id = request_data.user_id
+    amount =request_data.amount
+
+    try:
+        # Check if the user has an active reservation
+        #active_reservation = db.query(Reservation).filter(Reservation.user_id == user_id, Reservation.is_active == True).first()
+
+        if True:#active_reservation:
+            # User has an active reservation, deduct the money from their wallet
+            user = db.query(User).filter(User.id == user_id).first()
+            wallet = db.query(Wallet).filter(Wallet.user_id == user_id).first()
+
+            if not wallet or wallet.balance <= 0:
+                raise HTTPException(status_code=400, detail="Insufficient balance")
+
+            wallet.balance -= amount  # Deduct one unit of currency from the wallet
+            db.commit()
+
+            return {"message": "Money deducted successfully"}
+        else:
+            raise HTTPException(status_code=400, detail="No active reservation found")
+    except Exception as e:
+        # Handle any exceptions here and optionally roll back the transaction if needed
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+    finally:
+        db.close()
 
 @app.post("/cards/")
 async def create_card(card_data: CardCreate):
