@@ -576,6 +576,21 @@ async def create_wallet(wallet_data: WalletCreate):
     except Exception as e:
         return {"message": f"Error creating wallet: {str(e)}"}
 
+
+@app.get("/wallets/", response_model=List[WalletResponse])
+async def list_wallets(db: Session = Depends(get_db)):
+    wallets = db.query(Wallet).all()
+    wallet_responses = []
+    for wallet in wallets:
+        wallet_response = WalletResponse(
+            id=wallet.id,
+            user_id=wallet.user_id,
+            balance=wallet.balance
+        )
+        wallet_responses.append(wallet_response)
+    return wallet_responses
+
+
 # Get a wallet by ID
 @app.get("/wallets/{user_id}")
 async def get_wallet(user_id: int):
@@ -870,17 +885,27 @@ def get_reservations_by_user_id(user_id: int, db: Session = Depends(get_db)):
 @app.get("/reservations/all", response_model=List[ReservationResponse])
 def get_all_reservations(db: Session = Depends(get_db)):
     db_reservations = db.query(Reservation).all()
+    if not db_reservations:
+        return []  # Return an empty list if there are no reservations
     return db_reservations
 
-# Check reservation availability at a specific time
-@app.get("/reservations/check")
-def check_reservation_at_time(check_time: datetime, db: Session = Depends(get_db)):
-    db_reservation = db.query(Reservation).filter(
-        Reservation.reservation_time == check_time, 
+
+
+
+class ReservationTimeRange(BaseModel):
+    start_time: datetime
+    end_time: datetime
+
+@app.post("/reservations/check")
+def check_reservation_in_range(range_data: ReservationTimeRange, db: Session = Depends(get_db)):
+    active_reservations = db.query(Reservation).filter(
+        Reservation.start_time < range_data.end_time,
+        Reservation.end_time > range_data.start_time,
         Reservation.is_active == True
-    ).first()
-    if db_reservation:
-        return {"status": "Unavailable", "reservation_id": db_reservation.id}
+    ).all()
+    
+    if active_reservations:
+        return {"status": "Unavailable", "reservations": [{"start_time": res.start_time, "end_time": res.end_time} for res in active_reservations]}
     else:
         return {"status": "Available"}
 
