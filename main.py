@@ -152,7 +152,7 @@ class UserActivation(BaseModel):
 
 # Pydantic model for creating a reservation
 class ReservationCreate(BaseModel):
-    id:str
+    id:int
     user_id: int
     parking_spot_id: str
     start_time: datetime
@@ -161,7 +161,7 @@ class ReservationCreate(BaseModel):
 
 # Pydantic model for reservation response
 class ReservationResponse(BaseModel):
-    id: str
+    id: int
     user_id: int
     parking_spot_id: str
     start_time: datetime
