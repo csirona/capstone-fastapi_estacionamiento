@@ -897,8 +897,9 @@ class ReservationTimeRange(BaseModel):
     end_time: datetime
 
 @app.post("/reservations/check")
-def check_reservation_in_range(range_data: ReservationTimeRange, db: Session = Depends(get_db)):
+def check_reservation_in_range(spot_id: str, range_data: ReservationTimeRange, db: Session = Depends(get_db)):
     active_reservations = db.query(Reservation).filter(
+        Reservation.parking_spot_id == spot_id,
         Reservation.start_time < range_data.end_time,
         Reservation.end_time > range_data.start_time,
         Reservation.is_active == True
@@ -908,6 +909,7 @@ def check_reservation_in_range(range_data: ReservationTimeRange, db: Session = D
         return {"status": "Unavailable", "reservations": [{"start_time": res.start_time, "end_time": res.end_time} for res in active_reservations]}
     else:
         return {"status": "Available"}
+
 
 
 if __name__ == "__main__":
