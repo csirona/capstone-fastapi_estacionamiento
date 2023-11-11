@@ -448,15 +448,25 @@ async def get_cars(user_id: int):
 
     return car_responses
 
-@app.get("/cars/{car_id}", response_model=List[CarResponse])
-async def get_cars_id(car_id: int):
-    db = SessionLocal()
-    cars = db.query(Car).filter(Car.id == car_id).all()
-    db.close()
+from fastapi import HTTPException
 
+@app.get("/cars/{car_id}", response_model=CarResponse)
+async def get_car_id(car_id: int, db: Session = Depends(get_db)):
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if not car:
+        raise HTTPException(status_code=404, detail="Car not found")
 
-    
-    return cars
+    car_response = CarResponse(
+        id=car.id,
+        user_id=car.user_id,
+        license_plate=car.license_plate,
+        year=car.year,
+        brand=car.brand,
+        model=car.model,
+        is_active=car.is_active
+    )
+
+    return car_response
 
     
 # Add a route to list all users
