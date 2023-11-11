@@ -448,6 +448,27 @@ async def get_cars(user_id: int):
 
     return car_responses
 
+@app.get("/cars/{car_id}", response_model=List[CarResponse])
+async def get_cars(car_id: int):
+    db = SessionLocal()
+    cars = db.query(Car).filter(Car.id == car_id).all()
+    db.close()
+
+
+    car_responses = []
+    for car in cars:
+        car_response = CarResponse(
+            id=car.id,
+            user_id=car.user_id,
+            license_plate=car.license_plate,
+            year=car.year,
+            brand=car.brand,
+            model=car.model,
+            is_active=car.is_active
+        )
+        car_responses.append(car_response)
+
+    return car_responses
 
     
 # Add a route to list all users
@@ -756,6 +777,7 @@ async def create_car(car_data: CarCreate):
         return new_car  # Return the newly created car
     except Exception as e:
         return {"message": f"Error creating car: {str(e)}"}
+
 
 
 
