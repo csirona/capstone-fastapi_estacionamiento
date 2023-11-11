@@ -470,7 +470,9 @@ async def get_car_id(car_id: int, db: Session = Depends(get_db)):
     )
     print(car_response)
 
-    return car_response
+    return [
+        's'
+    ]
 
     
 # Add a route to list all users
