@@ -455,20 +455,8 @@ async def get_cars_id(car_id: int):
     db.close()
 
 
-    car_responses = []
-    for car in cars:
-        car_response = CarResponse(
-            id=car.id,
-            user_id=car.user_id,
-            license_plate=car.license_plate,
-            year=car.year,
-            brand=car.brand,
-            model=car.model,
-            is_active=car.is_active
-        )
-        car_responses.append(car_response)
-
-    return car_responses
+    
+    return cars
 
     
 # Add a route to list all users
