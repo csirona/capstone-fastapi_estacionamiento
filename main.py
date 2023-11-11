@@ -429,7 +429,7 @@ async def shutdown():
 @app.get("/cars/{user_id}", response_model=List[CarResponse])
 async def get_cars(user_id: int):
     db = SessionLocal()
-    cars = db.query(Car).filter(Car.user_id == user_id).first()
+    cars = db.query(Car).filter(Car.user_id == user_id).all()
     db.close()
 
 
