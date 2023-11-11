@@ -568,6 +568,57 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "User deleted successfully"}   
 
+
+# Pydantic model for updating user email
+class UpdateUserEmail(BaseModel):
+    new_email: str
+
+# Endpoint to modify user email
+@app.put("/users/{user_id}/update-email")
+async def update_user_email(user_id: int, update_data: UpdateUserEmail, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.email = update_data.new_email
+    db.commit()
+
+    return {"message": "User email updated successfully"}
+
+
+# Pydantic model for updating car details
+class UpdateCarDetails(BaseModel):
+    license_plate: Optional[str] = None
+    year: Optional[int] = None
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    is_active: Optional[bool] = None
+
+# Endpoint to modify car details
+@app.put("/cars/{car_id}/update-details")
+async def update_car_details(car_id: int, update_data: UpdateCarDetails, db: Session = Depends(get_db)):
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if not car:
+        raise HTTPException(status_code=404, detail="Car not found")
+
+    # Update car details if provided in the request
+    if update_data.license_plate is not None:
+        car.license_plate = update_data.license_plate
+    if update_data.year is not None:
+        car.year = update_data.year
+    if update_data.brand is not None:
+        car.brand = update_data.brand
+    if update_data.model is not None:
+        car.model = update_data.model
+    if update_data.is_active is not None:
+        car.is_active = update_data.is_active
+
+    db.commit()
+
+    return {"message": "Car details updated successfully"}
+
+
+
 # Create a new wallet
 @app.post("/wallets/")
 async def create_wallet(wallet_data: WalletCreate):
