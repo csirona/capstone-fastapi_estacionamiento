@@ -448,7 +448,6 @@ async def get_cars(user_id: int):
 
     return car_responses
 
-from fastapi import HTTPException
 
 @app.get("/cars/{car_id}", response_model=CarResponse)
 async def get_car_id(car_id: int, db: Session = Depends(get_db)):
@@ -465,6 +464,11 @@ async def get_car_id(car_id: int, db: Session = Depends(get_db)):
         model=car.model,
         is_active=car.is_active
     )
+    print(car)
+    print(
+        'qqqqqqqq'
+    )
+    print(car_response)
 
     return car_response
 
