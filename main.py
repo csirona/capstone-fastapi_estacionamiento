@@ -449,7 +449,7 @@ async def get_cars(user_id: int):
     return car_responses
 
 @app.get("/cars/{car_id}", response_model=List[CarResponse])
-async def get_cars(car_id: int):
+async def get_cars_id(car_id: int):
     db = SessionLocal()
     cars = db.query(Car).filter(Car.id == car_id).all()
     db.close()
