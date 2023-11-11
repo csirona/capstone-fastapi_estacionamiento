@@ -16,6 +16,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import timedelta, timezone
+from transbank.webpay.webpay_plus.transaction import Transaction as WebpayTransaction
+from fastapi.responses import HTMLResponse
+from fastapi import Request
+from transbank.error.transbank_error import TransbankError
+
 
 
 app = FastAPI()
@@ -909,6 +914,93 @@ def check_reservation_in_range(spot_id: str, range_data: ReservationTimeRange, d
         return {"status": "Unavailable", "reservations": [{"start_time": res.start_time, "end_time": res.end_time} for res in active_reservations]}
     else:
         return {"status": "Available"}
+
+
+
+
+# Pydantic model for creating a Webpay transaction
+class WebpayCreateRequest(BaseModel):
+    buy_order: str
+    session_id: str
+    amount: int
+    return_url: str
+
+# Route to create a Webpay transaction
+@app.post("/webpay-plus/create", response_model=dict)
+async def webpay_plus_create(request_data: WebpayCreateRequest, db: Session = Depends(get_db)):
+    try:
+        print("Webpay Plus Transaction.create")
+
+        # Extract data from the request
+        buy_order = request_data.buy_order
+        session_id = request_data.session_id
+        amount = request_data.amount
+        return_url = request_data.return_url
+
+        # Create the transaction request
+        create_request = {
+            "buy_order": buy_order,
+            "session_id": session_id,
+            "amount": amount,
+            "return_url": return_url
+        }
+
+        # Call Transbank's Webpay create method
+        response = WebpayTransaction().create(buy_order, session_id, amount, return_url)
+
+        print(response)
+
+        return {"request": create_request, "response": response}
+    except TransbankError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Route to handle Webpay commit
+@app.post("/webpay-plus/commit", response_model=dict)
+async def webpay_plus_commit(token_ws: str, db: Session = Depends(get_db)):
+    try:
+        print("commit for token_ws: {}".format(token_ws))
+
+        # Commit the Webpay transaction using the received token
+        response = WebpayTransaction().commit(token=token_ws)
+        print("response: {}".format(response))
+
+        return {"token": token_ws, "response": response}
+    except TransbankError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Route to handle Webpay commit error
+@app.post("/webpay-plus/commit-error", response_model=dict)
+async def webpay_plus_commit_error(token_ws: str, db: Session = Depends(get_db)):
+    try:
+        print("commit error for token_ws: {}".format(token_ws))
+
+        # Simulate an error in the commit process
+        response = {
+            "error": "Transacción con errores"
+        }
+
+        return {"token": token_ws, "response": response}
+    except TransbankError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Route to handle Webpay refund
+@app.post("/webpay-plus/refund", response_model=dict)
+async def webpay_plus_refund(token_ws: str, amount: float, db: Session = Depends(get_db)):
+    try:
+        print("refund for token_ws: {} by amount: {}".format(token_ws, amount))
+
+        # Refund the Webpay transaction using the received token and amount
+        response = WebpayTransaction().refund(token_ws, amount)
+        print("response: {}".format(response))
+
+        return {"token": token_ws, "amount": amount, "response": response}
+    except TransbankError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Route to render the Webpay refund form
+@app.get("/webpay-plus/refund-form", response_class=HTMLResponse)
+async def webpay_plus_refund_form(request: Request):
+    return templates.TemplateResponse("webpay/plus/refund-form.html", {"request": request})
 
 
 
