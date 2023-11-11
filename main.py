@@ -465,6 +465,7 @@ async def get_car_id(car_id: int, db: Session = Depends(get_db)):
         is_active=car.is_active
     )
 
+
     return car_response
 
     
