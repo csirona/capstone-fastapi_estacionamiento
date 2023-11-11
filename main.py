@@ -452,8 +452,8 @@ async def get_cars(user_id: int):
 @app.get("/cars/{car_id}", response_model=CarResponse)
 async def get_car_id(car_id: int, db: Session = Depends(get_db)):
     car = db.query(Car).filter(Car.id == car_id).first()
-    if not car:
-        raise HTTPException(status_code=404, detail="Car not found")
+    if  car:
+        raise HTTPException(status_code=404, detail=f"Car not found {car}")
 
     car_response = CarResponse(
         id=car.id,
