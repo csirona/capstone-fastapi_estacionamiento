@@ -231,6 +231,22 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise HTTPException(status_code=401, detail="Token validation failed")
 
+class UserActivation(BaseModel):
+    is_active: bool
+
+@app.put("/users/{user_id}/activate")
+async def activate_user(user_id: int, user_activation: UserActivation, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.is_active = user_activation.is_active
+    db.commit()
+
+    if user_activation.is_active:
+        return {"message": "User activated successfully"}
+    else:
+        return {"message": "User deactivated successfully"}
 
 @app.put("/users/{user_id}/activate")
 async def activate_user(user_id: int, user_activation: UserActivation, db: Session = Depends(get_db)):
