@@ -124,7 +124,7 @@ class ParkingMovementCreate(BaseModel):
     user_id: int
     entry_time: str  # Change to string
     exit_time: Optional[str]  # Change to string, as it's optional
-    parking_spot_id: int
+    parking_spot_id: str
     total_cost: float
     vehicle_type: str
     license_plate: str
@@ -135,7 +135,7 @@ class ParkingMovementResponse(BaseModel):
     user_id: int
     entry_time: str
     exit_time: str
-    parking_spot_id: int
+    parking_spot_id: str
     total_cost: float
     vehicle_type: str
     license_plate: str

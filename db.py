@@ -89,7 +89,7 @@ class ParkingMovement(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     entry_time = Column(DateTime, default=datetime.utcnow)
     exit_time = Column(DateTime, nullable=True)
-    parking_spot_id = Column(Integer)
+    parking_spot_id = Column(String)
     total_cost = Column(Float)
     # Additional attributes
     vehicle_type = Column(String)
