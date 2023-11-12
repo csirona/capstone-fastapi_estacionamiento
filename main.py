@@ -939,6 +939,30 @@ async def create_parking_movement(parking_movement_data: ParkingMovementCreate):
         raise HTTPException(status_code=500, detail=f"Error creating parking movement: {str(e)}")
 
 
+# Endpoint to get all parking movements
+@app.get("/parking-movements/", response_model=List[ParkingMovementResponse])
+def get_all_parking_movements(db: Session = Depends(get_db)):
+    parking_movements = db.query(ParkingMovement).all()
+    
+    # Convert the database objects to Pydantic models for response
+    parking_movement_responses = []
+    for movement in parking_movements:
+        movement_response = ParkingMovementResponse(
+            id=movement.id,
+            user_id=movement.user_id,
+            entry_time=str(movement.entry_time),  # Convert to string if needed
+            exit_time=str(movement.exit_time),  # Convert to string if needed
+            parking_spot_id=movement.parking_spot_id,
+            total_cost=movement.total_cost,
+            vehicle_type=movement.vehicle_type,
+            license_plate=movement.license_plate,
+            notes=movement.notes
+        )
+        parking_movement_responses.append(movement_response)
+
+    return parking_movement_responses
+
+
 # Get parking movements for a user
 @app.get("/parking-movements/{user_id}", response_model=List[ParkingMovementResponse])
 async def get_parking_movements(user_id: int):
