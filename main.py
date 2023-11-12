@@ -468,6 +468,51 @@ async def get_car_id(car_id: int, db: Session = Depends(get_db)):
 
     return car_response
 
+
+# Endpoint to get the in_use status
+@app.get("/cars/{car_id}/in_use", response_model=bool)
+def read_car_in_use(car_id: int):
+    db = SessionLocal()
+    car = db.query(Car).filter(Car.id == car_id).first()
+    db.close()
+    if car:
+        return car.in_use
+    raise HTTPException(status_code=404, detail="Car not found")
+
+# Endpoint to update the in_use status
+@app.put("/cars/{car_id}/in_use")
+def update_car_in_use(car_id: int, in_use: bool):
+    db = SessionLocal()
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if car:
+        car.in_use = in_use
+        db.commit()
+        db.close()
+        return {"message": "In_use status updated successfully"}
+    db.close()
+    raise HTTPException(status_code=404, detail="Car not found")# Endpoint to get the in_use status
+@app.get("/cars/{car_id}/in_use", response_model=bool)
+def read_car_in_use(car_id: int):
+    db = SessionLocal()
+    car = db.query(Car).filter(Car.id == car_id).first()
+    db.close()
+    if car:
+        return car.in_use
+    raise HTTPException(status_code=404, detail="Car not found")
+
+# Endpoint to update the in_use status
+@app.put("/cars/{car_id}/in_use")
+def update_car_in_use(car_id: int, in_use: bool):
+    db = SessionLocal()
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if car:
+        car.in_use = in_use
+        db.commit()
+        db.close()
+        return {"message": "In_use status updated successfully"}
+    db.close()
+    raise HTTPException(status_code=404, detail="Car not found")
+
     
 # Add a route to list all users
 @app.get("/users/", response_model=List[UserResponse])
