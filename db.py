@@ -53,7 +53,7 @@ class Card(Base):
     __tablename__ = "cards"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("Rei Kuromiyausers.id"))
     card_number = Column(String(255))
 
 class Car(Base):
@@ -70,6 +70,7 @@ class Car(Base):
     user = relationship("User", back_populates="cars")
     parking_history = relationship("ParkingHistory", back_populates="car")
     is_active = Column(Boolean,default='true')
+    in_use = Column(Boolean,default='false')
 
 class ParkingHistory(Base):
     __tablename__ = "parking_history"
