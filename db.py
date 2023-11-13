@@ -60,7 +60,7 @@ class Car(Base):
     model = Column(String(255))  # Add the model field
 
     # Establish a many-to-one relationship with users
-    user = relationship("User", back_populates="car")
+    user = relationship("User", back_populates="cars")
     is_active = Column(Boolean,default='true')
     in_use = Column(Boolean,default='false')
 
@@ -81,7 +81,7 @@ class ParkingMovement(Base):
     notes = Column(String)
 
     # Define relationships
-    user = relationship("User", back_populates="parking_movement")
+    user = relationship("User", back_populates="parking_movements")
 
 
 class Reservation(Base):
@@ -95,7 +95,7 @@ class Reservation(Base):
     is_active = Column(Boolean, default=True)
     
     # Relaciones
-    user = relationship("User", back_populates="reservation")
+    user = relationship("User", back_populates="reservations")
     # parking_spot = relationship("ParkingSpot", back_populates="reservations") # Descomenta esto si tienes una tabla de ParkingSpot
 
 # Agrega la relación en la clase User
