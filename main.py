@@ -465,6 +465,27 @@ async def get_cars(user_id: int):
     return car_responses
 
 
+@app.get("/cars/in-use/{user_id}", response_model=List[CarResponse])
+async def get_cars_inuse(user_id: int):
+    db = SessionLocal()
+    car = db.query(Car).filter(Car.user_id == user_id and Car.in_use==True).first()
+    db.close()
+    if not car:
+        raise HTTPException(status_code=404, detail="Car not found")
+
+    car_response = CarResponse(
+            id=car.id,
+            user_id=car.user_id,
+            license_plate=car.license_plate,
+            year=car.year,
+            brand=car.brand,
+            model=car.model,
+            is_active=car.is_active
+        )
+
+    return car_response
+
+
 @app.get("/cars/{car_id}", response_model=CarResponse)
 async def get_car_id(car_id: int, db: Session = Depends(get_db)):
     car = db.query(Car).filter(Car.id == car_id).first()
@@ -472,13 +493,13 @@ async def get_car_id(car_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Car not found")
 
     car_response = CarResponse(
-        id=2,
-        user_id=3,
-        license_plate= "string",
-        year=0,
-        brand= "string",
-        model= "string",
-        is_active=True
+        id=car.id,
+        user_id=car.user_id,
+        license_plate=car.license_plate,
+        year=car.year,
+        brand=car.brand,
+        model=car.model,
+        is_active=car.is_active
     )
 
 
